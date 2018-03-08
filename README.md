@@ -16,7 +16,7 @@ B. The messages are sent successfully
 - Be careful with Device shadows - as of time of writing the limit was 10 device shadow publishes in flight per second.
 - If a few hundred devices all connect at the same time, the device shadows may not be updated and dropped.
 
-# How do we work around the in-flight message limitation on QoS 1 - while still having the ability to get confirmation that the event was received by the broker and processed?
+## How do we work around the in-flight message limitation on QoS 1 - while still having the ability to get confirmation that the event was received by the broker and processed?
 
 Step 1: Set your Publish events to AWS to use QoS 0 
 Step 2: The publish event will need to contain the device ID and a unique message code so the message can be differentiated from other device and other messages that device may send.
@@ -26,8 +26,8 @@ Step 5: Have your device compare the unique message ID to the one that was just 
 Step 6: If the unqiue message ID is not returned within X number of seconds, set your code to republish the message.
 
 
-**Bonus tip: Discard delayed messages from being republished or actioned**
->>> This part has not yet been fully tested - use with caution.<<<
+## Bonus tip: Discard delayed messages from being republished or actioned
+This part has not yet been fully tested - use with caution.<<<
 
 Given we are using QoS 0, it is possible a message we sent earlier may arrive after we have retried a message.
 If your message is set to perform an action once and once only (e.g. Send a SMS) you will probably want to discard any late arriving messages. This could be done with time stamps.

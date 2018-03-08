@@ -41,12 +41,15 @@ You will need to add the below code into the 'action' topic:
   ```outReturn/${deviceID}
  ```
 
-Step 4: Have your device subscribe to a topic where the 'return' message will come back
+Step 4: Go to IAM and select the *ROLE* that you selected to run the re-publish action in AWS IoT.
+Set the role to be able to 'access all resources'. There might be a more secure option to allow it access to the 2nd 'republish' so best to look into that depending on your account complexity.
+
+Step 5: Have your device subscribe to a topic where the 'return' message will come back
 ```client.subscribe(String("outReturn/" + deviceID); 
 ```
 In the above code, we are subscribing to the topic out/myDevicesID - so that way we are not getting the messages for every other device heading our way. If you have 1000+ devices, you don't want all those messages heading off to every device.
 
-Step 5: Have your device compare the unique message ID to the one that was just sent to validate they match.
+Step 6: Have your device compare the unique message ID to the one that was just sent to validate they match.
   ```C++
   if (newUniqueMessageCode == UniqueMessageCode)
   {
@@ -54,7 +57,7 @@ Step 5: Have your device compare the unique message ID to the one that was just 
   }
 ```
 
-Step 6: If the unqiue message ID is not returned within X number of seconds, set your code to republish the message.
+Step 7: If the unqiue message ID is not returned within X number of seconds, set your code to republish the message.
 This part you'll need to write yourself and embed within your publish as you'll want to handle the 'retry' or 'error handling' of each failure individually. 
 
 e.g. If a SMS event fails, try again for 5 times until the latest uniqueMessageCode is returned. After 5 tries - stop

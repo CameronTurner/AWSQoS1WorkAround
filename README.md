@@ -1,4 +1,4 @@
-# AWSQoS1WorkAround
+# AWS QoS1 Work Around for limited in-flight messages
 AWS IoT MQTT Broker has a 100 in-flight message limit which impacts QoS 1 services. This work around moves QoS from TCP to Application level.
 
 **Problem:** AWS MQTT brokers are limited to 100 in-flight messages in a given second. After checking with support is seems that messages above this are dropped.

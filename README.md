@@ -19,12 +19,46 @@ B. The messages are sent successfully
 ## How do we work around the in-flight message limitation on QoS 1 - while still having the ability to get confirmation that the event was received by the broker and processed?
 
 Step 1: Set your Publish events to AWS to use QoS 0 
-Step 2: The publish event will need to contain the device ID and a unique message code so the message can be differentiated from other device and other messages that device may send.
-Step 3: Set an action in AWS IoT to 'republish' all events on a given topic when an event is received to a differnet topic
-Step 4: Have your device subscribe to a topic where the 'return' message will come back
-Step 5: Have your device compare the unique message ID to the one that was just sent to validate they match.
-Step 6: If the unqiue message ID is not returned within X number of seconds, set your code to republish the message.
 
+  This will vary based on the library you use, the example below is when using the MQTT TLS library from https://github.com/hirotakaster/MQTT-TLS
+  
+  ```C++
+  client.publish("outTopic/message", "hello world");
+  ```
+  
+
+Step 2: The publish event will need to contain the device ID and a unique message code so the message can be differentiated from other device and other messages that device may send.
+e.g. pass the JSON example below.
+{
+"deviceID":"1243",
+"uniqueMsgID":"time"
+}
+
+Step 3: Set an action in AWS IoT to 'republish' all events on a given topic when an event is received to a differnet topic
+- This bit is easy, go to Actions, subscribe to the topic you want to respond to, then set the action to 'republish events'.
+You will need to add the below code into the 'action' topic: 
+
+  ```outReturn/${deviceID}
+ ```
+
+Step 4: Have your device subscribe to a topic where the 'return' message will come back
+```client.subscribe(String("outReturn/" + deviceID); 
+```
+In the above code, we are subscribing to the topic out/myDevicesID - so that way we are not getting the messages for every other device heading our way. If you have 1000+ devices, you don't want all those messages heading off to every device.
+
+Step 5: Have your device compare the unique message ID to the one that was just sent to validate they match.
+  ```C++
+  if (newUniqueMessageCode == UniqueMessageCode)
+  {
+  publishEvent_outTopic = 1; //1 is for success
+  }
+```
+
+Step 6: If the unqiue message ID is not returned within X number of seconds, set your code to republish the message.
+This part you'll need to write yourself and embed within your publish as you'll want to handle the 'retry' or 'error handling' of each failure individually. 
+
+e.g. If a SMS event fails, try again for 5 times until the latest uniqueMessageCode is returned. After 5 tries - stop
+e.g. If a Valve doesn't close, then rather than try again, instead send a SMS alert advising of the failure and turn off the 2nd valve that might be locally controlled.
 
 ## Bonus tip: Discard delayed messages from being republished or actioned
 This part has not yet been fully tested - use with caution.<<<
@@ -48,4 +82,6 @@ In the AWS IoT SQL Select statement set the condition to:
    
    D = Represents the number of seconds (5 seconds) that can elapse since the message was sent - don't set it too low, while both devices are using the same 'time' they may be out by a second or two. If you are using a Particle.io device - remember to run the below code at least every time your start the device and once per day. 
    
-   Time.sync(); 
+  ```C++ 
+  Particle.syncTime(); 
+  ```
